@@ -1,2 +1,2 @@
 # CoreBay
-Bamazon but with a Better Name
+Bamazon but with a better name, a node.js application with MySQL.
