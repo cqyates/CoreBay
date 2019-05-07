@@ -79,6 +79,8 @@ function buy() {
         for (var i = 0; i < results.length; i++) {
           if (results[i].product_name === answer.choice) {
             chosenItem = results[i];
+            console.log("You've choosen to buy " + chosenItem.product_name);
+            console.log("The price is " + chosenItem.price)
           }
         }
 
