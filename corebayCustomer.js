@@ -13,7 +13,7 @@ var connection = mysql.createConnection({
 
   // Your password
   //To Do Figure Out How to Hide the Password
-  password: "Moonie!4411",
+  password: "",
   database: "corebay"
 });
 
@@ -31,6 +31,7 @@ function start () {
         if (err) throw err;
         console.table(results);
     });
+    console.log("______________________");
     inviteToBuy();
 
 }
@@ -55,3 +56,10 @@ function inviteToBuy () {
       
 }
 
+function buy() {
+    // query the database for all items available
+    connection.query("SELECT product_name FROM products", function(err, results) {
+        console.log("These are the patterns we have available" + results);
+      if (err) throw err;
+    });
+}
