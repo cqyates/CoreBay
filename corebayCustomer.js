@@ -13,7 +13,7 @@ var connection = mysql.createConnection({
 
   // Your password
   //To Do Figure Out How to Hide the Password
-  password: "",
+  password: "Moonie!4411",
   database: "corebay"
 });
 
@@ -25,9 +25,11 @@ connection.connect(function(err) {
 });
 
 function start () {
+    console.log("\n\n------------------------\n\n");
     console.log("Hi! Welcome to CoreBay");
-    console.log("Here is our Product List");
-    connection.query("SELECT * FROM products", function(err, results) {
+    console.log("\n\n------------------------\n\n");
+    console.log("Here is a List of Our Products");
+    connection.query("SELECT product_name FROM products", function(err, results) {
         if (err) throw err;
         console.table(results);
     });
@@ -37,29 +39,49 @@ function start () {
 }
 
 function inviteToBuy () {
-    inquirer
-    .prompt({
-        name: "buy",
-        type: "list",
-        message: "Would you like to buy a pattern today?",
-        choices: ["YES", "NO",]
-          })
-            .then(function(answer) {
-            if (answer.buy === "YES") {
-                buy();
-                } else {
-                console.log("Bye Bye");
-                connection.end();
-                }
-            });
-      
-      
-}
+  inquirer
+  .prompt({
+    name: "buy",
+    type: "list",
+    message: "Would you like to buy a pattern today?",
+    choices: ["YES", "NO",]
+  }).then(function(answer) {
+    if (answer.buy === "YES") {
+        buy();
+    } else {
+        console.log("Bye Bye");
+        connection.end();
+    }
+  });
+  }
 
 function buy() {
-    // query the database for all items available
-    connection.query("SELECT product_name FROM products", function(err, results) {
-        console.log("These are the patterns we have available" + results);
-      if (err) throw err;
-    });
+  connection.query("SELECT * FROM products", function(err, results) {
+    if (err) throw err;
+    // once you have the items, prompt the user for which they'd like to bid on
+    inquirer
+      .prompt([
+        {
+          name: "choice",
+          type: "rawlist",
+          choices: function() {
+            var choiceArray = [];
+            for (var i = 0; i < results.length; i++) {
+              choiceArray.push(results[i].product_name);
+            }
+            return choiceArray;
+          },
+          message: "What would you like to buy?"
+        }
+      ]).then(function(answer) {
+        // get the information of the chosen item
+        var chosenItem;
+        for (var i = 0; i < results.length; i++) {
+          if (results[i].product_name === answer.choice) {
+            chosenItem = results[i];
+          }
+        }
+
+      });
+  });
 }
