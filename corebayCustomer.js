@@ -32,9 +32,9 @@ function start () {
     connection.query("SELECT product_name FROM products", function(err, results) {
         if (err) throw err;
         console.table(results);
-    });
-    console.log("______________________");
-    inviteToBuy();
+        inviteToBuy();
+    })
+    
 
 }
 
@@ -49,16 +49,30 @@ function inviteToBuy () {
     if (answer.buy === "YES") {
         buy();
     } else {
-        console.log("Bye Bye");
+        console.log("Bye");
         connection.end();
     }
   });
-  }
+}
+
+function anythingElse () {
+  inquirer
+  .prompt ({
+    name: "buy",
+    type: "list",
+    message: "Would you like to buy anything else?",
+    choices: ["YES", "NO",]
+  }).then(function(answer) {
+    if (answer.buy === "YES") {
+        buy();
+    } checkout();
+  
+  });
+}
 
 function buy() {
   connection.query("SELECT * FROM products", function(err, results) {
     if (err) throw err;
-    // once you have the items, prompt the user for which they'd like to bid on
     inquirer
       .prompt([
         {
@@ -76,14 +90,23 @@ function buy() {
       ]).then(function(answer) {
         // get the information of the chosen item
         var chosenItem;
+        //for loop ties the choice item to the item in the database
         for (var i = 0; i < results.length; i++) {
           if (results[i].product_name === answer.choice) {
             chosenItem = results[i];
             console.log("You've choosen to buy " + chosenItem.product_name);
-            console.log("The price is " + chosenItem.price)
-          }
+            console.log("The price is " + chosenItem.price);
+            anythingElse();
+          }  
         }
-
       });
+      
+
   });
 }
+function checkout() {
+ console.log("Thank You for Your Purchase");
+ 
+}
+
+   
