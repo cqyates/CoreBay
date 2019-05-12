@@ -4,109 +4,136 @@ var inquirer = require("inquirer");
 // create the connection information for the sql database
 var connection = mysql.createConnection({
   host: "localhost",
-
-  // Your port; if not 3306
   port: 3306,
-
-  // Your username
   user: "root",
-
-  // Your password
-  //To Do Figure Out How to Hide the Password
   password: "Moonie!4411",
   database: "corebay"
 });
 
-// connect to the mysql server and sql database
-connection.connect(function(err) {
+//after connection, start the application
+connection.connect(function (err) {
   if (err) throw err;
-  // run the start function after the connection is made to prompt the user
   start();
 });
 
-function start () {
-    console.log("\n\n------------------------\n\n");
-    console.log("Hi! Welcome to CoreBay");
-    console.log("\n\n------------------------\n\n");
-    console.log("Here is a List of Our Products");
-    connection.query("SELECT product_name FROM products", function(err, results) {
-        if (err) throw err;
-        console.table(results);
-        inviteToBuy();
-    })
-    
+var shoppingCart = []
 
+//starts the application
+function start() {
+  console.log("\n------------------------\n");
+  console.log("Hi! Welcome to CoreBay");
+  console.log("\n------------------------\n");
+  inviteToBuy();
 }
 
-function inviteToBuy () {
+//Brings up list of Products
+function getProducts() {
+  connection.query("SELECT * FROM products", function (error, results) {
+    if (error) throw error;
+    console.table(results);
+    buy(results);
+  })
+}
+
+function DisplayCart(){
+  console.log("Your cart contains!")
+  shoppingCart.forEach(function(item){
+    console.log(`Item: ${item.product.product_name}, amount: ${item.purchaseAmount}`)
+  })
+}
+
+function inviteToBuy() {
+  //console.log(shoppingCart);
+  shoppingCart.length > 0 ? DisplayCart() : null;
+
   inquirer
-  .prompt({
-    name: "buy",
-    type: "list",
-    message: "Would you like to buy a pattern today?",
-    choices: ["YES", "NO",]
-  }).then(function(answer) {
-    if (answer.buy === "YES") {
-        buy();
-    } else {
-        console.log("Bye");
+    .prompt({
+      name: "buy",
+      type: "list",
+      message: "Would you like to buy a pattern?",
+      choices: ["YES", "NO", "Checkout"]
+    }).then(function (answer) {
+      if (answer.buy === "YES") {
+        getProducts();
+      } 
+      else if(answer.buy === "Checkout") {
+        checkout(shoppingCart);
+      }
+      else {
+        console.log("Thanks");
         connection.end();
-    }
-  });
+      }
+    });
 }
 
-function anythingElse () {
+function checkout(cart){
+  for(var i = 0; i < cart.length; i++){
+    updateInventory(cart[i].product, cart[i].purchaseAmount);
+  }
+}
+
+function updateInventory(item, amount){
+  var sqlQuery = `UPDATE products
+                  SET quanity = quanity - ?
+                  WHERE product_name = ?`;
+
+  connection.query(sqlQuery, [ parseInt(amount), item.product_name ], function(err, res){
+    if(err) throw err;
+
+    console.log("Thank you for shopping!")
+    connection.end();
+  })
+}
+
+function buy(data) {
+  //connection.query("SELECT * FROM products", function(err, results) {
+  //if (err) throw err;
   inquirer
-  .prompt ({
-    name: "buy",
-    type: "list",
-    message: "Would you like to buy anything else?",
-    choices: ["YES", "NO",]
-  }).then(function(answer) {
-    if (answer.buy === "YES") {
-        buy();
-    } checkout();
-  
-  });
+    .prompt([
+      {
+        name: "choice",
+        type: "rawlist",
+        choices: function () {
+          var choiceArray = [];
+          for (var i = 0; i < data.length; i++) {
+            choiceArray.push(data[i].product_name);
+          }
+          return choiceArray;
+        },
+        message: "What would you like to buy?"
+      }
+    ]).then(function (answer) {
+      var chosenItem = ReturnItem(data, answer.choice);
+      promptQuantity(chosenItem);
+    }
+    )
+};
+
+function promptQuantity(item){
+  //console.log(item)
+  inquirer.prompt({
+    name: "quantity",
+    type: "input",
+    message: "How many do you want?",
+    validate: function(val){
+      return !isNaN(val) && val < item.quanity
+    }
+  }).then(function(answer){
+    var cartItem = {
+      product: item,
+      purchaseAmount: answer.quantity
+    }
+    shoppingCart.push(cartItem);
+    inviteToBuy();
+  })
 }
 
-function buy() {
-  connection.query("SELECT * FROM products", function(err, results) {
-    if (err) throw err;
-    inquirer
-      .prompt([
-        {
-          name: "choice",
-          type: "rawlist",
-          choices: function() {
-            var choiceArray = [];
-            for (var i = 0; i < results.length; i++) {
-              choiceArray.push(results[i].product_name);
-            }
-            return choiceArray;
-          },
-          message: "What would you like to buy?"
-        }
-      ]).then(function(answer) {
-        // get the information of the chosen item
-        var chosenItem;
-        //for loop ties the choice item to the item in the database
-        for (var i = 0; i < results.length; i++) {
-          if (results[i].product_name === answer.choice) {
-            chosenItem = results[i];
-            console.log("You've choosen to buy " + chosenItem.product_name);
-            console.log("The price is " + chosenItem.price);
-            anythingElse();
-          }  
-        }
-      });
-      
-
-  });
-}
-function checkout() {
- console.log("Thank You for Your Purchase");
- 
+function ReturnItem(database, choiceName) {
+  for (let i = 0; i < database.length; i++) {
+    if (database[i].product_name === choiceName) {
+      return database[i];
+    }
+  }
+  return null
 }
 
-   
