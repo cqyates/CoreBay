@@ -1,3 +1,4 @@
+
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 
@@ -86,8 +87,6 @@ function updateInventory(item, amount){
 }
 
 function buy(data) {
-  //connection.query("SELECT * FROM products", function(err, results) {
-  //if (err) throw err;
   inquirer
     .prompt([
       {
