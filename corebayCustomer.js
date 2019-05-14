@@ -1,4 +1,4 @@
-
+//dependencies
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 
@@ -44,25 +44,19 @@ function DisplayCart(){
 }
 
 function inviteToBuy() {
-  //console.log(shoppingCart);
   shoppingCart.length > 0 ? DisplayCart() : null;
-
   inquirer
     .prompt({
       name: "buy",
       type: "list",
       message: "Would you like to buy a pattern?",
-      choices: ["YES", "NO", "Checkout"]
+      choices: ["YES", "NO"]
     }).then(function (answer) {
       if (answer.buy === "YES") {
         getProducts();
       } 
-      else if(answer.buy === "Checkout") {
-        checkout(shoppingCart);
-      }
       else {
-        console.log("Thanks");
-        connection.end();
+        shoppingCart.length > 0 ? checkout(shoppingCart) : connection.end();
       }
     });
 }
@@ -80,9 +74,7 @@ function updateInventory(item, amount){
 
   connection.query(sqlQuery, [ parseInt(amount), item.product_name ], function(err, res){
     if(err) throw err;
-
-    console.log("Thank you for shopping!")
-    connection.end();
+    console.log("Thank you for shopping with Us! Your purchase was successful")
   })
 }
 
@@ -104,8 +96,7 @@ function buy(data) {
     ]).then(function (answer) {
       var chosenItem = ReturnItem(data, answer.choice);
       promptQuantity(chosenItem);
-    }
-    )
+    })
 };
 
 function promptQuantity(item){
