@@ -56,7 +56,7 @@ function inviteToBuy() {
         getProducts();
       } 
       else {
-        shoppingCart.length > 0 ? checkout(shoppingCart) : connection.end();
+       checkout(shoppingCart);
       }
     });
 }
@@ -64,6 +64,7 @@ function inviteToBuy() {
 function checkout(cart){
   for(var i = 0; i < cart.length; i++){
     updateInventory(cart[i].product, cart[i].purchaseAmount);
+    connection.end();
   }
 }
 
